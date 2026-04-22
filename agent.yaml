@@ -1,0 +1,14 @@
+name: sample-agent
+template:
+  kind: hosted
+  name: sample-agent
+  description: >
+    Sample hosted agent with configurable instructions.
+  protocols:
+    - protocol: responses
+      version: v1
+  environment_variables:
+    - name: AZURE_AI_PROJECT_ENDPOINT
+      value: ${AZURE_AI_PROJECT_ENDPOINT}
+    - name: MODEL_DEPLOYMENT_NAME
+      value: ${AZURE_AI_MODEL_DEPLOYMENT_NAME}
