@@ -83,21 +83,24 @@ def load_config(
             candidate_id,
         )
 
-    # ── Priority 2: AGENT_OPTIMIZATION_CONFIG env var (inline JSON) ──
-    raw_config = os.environ.get("AGENT_OPTIMIZATION_CONFIG", "").strip()
-    if raw_config:
-        try:
-            cfg = json.loads(raw_config)
-            return OptimizationConfig(
-                instructions=cfg.get("instructions", default_instructions),
-                model=cfg.get("model", default_model),
-                temperature=cfg.get("temperature", default_temperature),
-                skills=_parse_skills(cfg.get("skills", [])),
-                skills_dir=cfg.get("skills_dir", default_skills_dir),
-                source="env:AGENT_OPTIMIZATION_CONFIG",
-            )
-        except (json.JSONDecodeError, TypeError) as exc:
-            logger.warning("Bad AGENT_OPTIMIZATION_CONFIG env var: %s", exc)
+    # ── Priority 2: Config env var (inline JSON) ───────────────────
+    # AGENT_OPTIMIZATION_CONFIG is set by the optimization service (first-party).
+    # OPTIMIZATION_CONFIG is the non-reserved fallback used by CLI tooling.
+    for env_var in ("AGENT_OPTIMIZATION_CONFIG", "OPTIMIZATION_CONFIG"):
+        raw_config = os.environ.get(env_var, "").strip()
+        if raw_config:
+            try:
+                cfg = json.loads(raw_config)
+                return OptimizationConfig(
+                    instructions=cfg.get("instructions", default_instructions),
+                    model=cfg.get("model", default_model),
+                    temperature=cfg.get("temperature", default_temperature),
+                    skills=_parse_skills(cfg.get("skills", [])),
+                    skills_dir=cfg.get("skills_dir", default_skills_dir),
+                    source=f"env:{env_var}",
+                )
+            except (json.JSONDecodeError, TypeError) as exc:
+                logger.warning("Bad %s env var: %s", env_var, exc)
 
     # ── Priority 3: Defaults ─────────────────────────────────────────
     model = default_model or os.environ.get("MODEL_DEPLOYMENT_NAME")
