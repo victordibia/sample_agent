@@ -125,7 +125,7 @@ Be concise, accurate, and helpful."""
 
 config = load_config(
     default_instructions=SYSTEM_PROMPT,
-    default_model=os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5-mini"),
+    default_model=os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini"),
     default_skills_dir="skills",
 )
 
@@ -134,7 +134,7 @@ all_instructions = config.compose_instructions()
 if local_skills and not config.skills:
     all_instructions = build_system_prompt(all_instructions, local_skills)
 
-MODEL = config.model or os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5-mini")
+MODEL = config.model or os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-4.1-mini")
 SKILL_MAP = {s["name"]: s for s in local_skills}
 TOOLS = SKILL_TOOLS if local_skills else []
 
