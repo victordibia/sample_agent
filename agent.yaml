@@ -6,7 +6,7 @@ template:
     Sample hosted agent with configurable instructions.
   protocols:
     - protocol: responses
-      version: v1
+      version: 1.0.0
   environment_variables:
     - name: AZURE_AI_PROJECT_ENDPOINT
       value: ${AZURE_AI_PROJECT_ENDPOINT}

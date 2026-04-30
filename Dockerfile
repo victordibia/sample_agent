@@ -20,4 +20,4 @@ CMD bash -c '\
     cat /etc/ssl/certs/adc-egress-proxy-ca.crt >> /etc/ssl/certs/ca-certificates.crt && \
     cat /etc/ssl/certs/adc-egress-proxy-ca.crt >> $(python -c "import certifi; print(certifi.where())"); \
   fi && \
-  python -m uvicorn main:app --host 0.0.0.0 --port 8088'
+  python main.py'
