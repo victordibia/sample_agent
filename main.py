@@ -30,6 +30,13 @@ from azure.ai.agentserver.responses.models import (
     MessageContentOutputTextContent,
 )
 
+from azure.ai.agentserver.responses.streaming import ResponseEventStream
+from azure.ai.agentserver.responses.models._generated.sdk.models.models._models import (
+    ResponseUsage,
+    ResponseUsageInputTokensDetails,
+    ResponseUsageOutputTokensDetails,
+)
+
 from agent_optimization import load_config
 
 logging.basicConfig(level=logging.INFO)
@@ -117,7 +124,33 @@ async def handler(
         ),
     )
 
-    return TextResponse(context, request, text=response.output_text)
+    # Build usage from the model response
+    usage = None
+    if response.usage:
+        usage = ResponseUsage(
+            input_tokens=response.usage.input_tokens or 0,
+            output_tokens=response.usage.output_tokens or 0,
+            total_tokens=response.usage.total_tokens or 0,
+            input_tokens_details=ResponseUsageInputTokensDetails(cached_tokens=0),
+            output_tokens_details=ResponseUsageOutputTokensDetails(reasoning_tokens=0),
+        )
+
+    # Use ResponseEventStream directly to include usage in the response
+    stream = ResponseEventStream(response_id=context.response_id, request=request)
+    async def _events():
+        yield stream.emit_created()
+        yield stream.emit_in_progress()
+        message = stream.add_output_item_message()
+        yield message.emit_added()
+        text_content = message.add_text_content()
+        yield text_content.emit_added()
+        yield text_content.emit_delta(response.output_text or "")
+        yield text_content.emit_text_done(response.output_text or "")
+        yield text_content.emit_done()
+        yield message.emit_done()
+        yield stream.emit_completed(usage=usage)
+
+    return _events()
 
 
 app.run()
