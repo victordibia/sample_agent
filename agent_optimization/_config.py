@@ -6,6 +6,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass, field
+from typing import ClassVar
 
 from agent_optimization._resolver import resolve_candidate
 
@@ -28,6 +29,18 @@ class OptimizationConfig:
     When not running under optimization, all fields contain the defaults
     you passed to :func:`load_config` — your agent works unchanged.
     """
+
+    # Env var names set on temp versions (mirrors C# CandidateVersionManager)
+    # TODO(1): Revert to AGENT_OPTIMIZATION_CANDIDATE_ID / AGENT_OPTIMIZATION_CONFIG
+    # once the platform allowlists these env vars. Currently all AGENT_* and
+    # FOUNDRY_* prefixes are reserved per container-image-spec and the API
+    # rejects them with:
+    #   "Environment variable 'AGENT_OPTIMIZATION_CANDIDATE_ID' is reserved
+    #    for platform use. All FOUNDRY_* and AGENT_* variables are reserved
+    #    per container-image-spec."
+    ENV_CANDIDATE_ID: ClassVar[str] = "OPTIMIZATION_CANDIDATE_ID"
+    ENV_CONFIG: ClassVar[str] = "OPTIMIZATION_CONFIG"
+    ENV_CONFIG_LEGACY: ClassVar[str] = "AGENT_OPTIMIZATION_CONFIG"  # backward compat
 
     instructions: str
     model: str | None
@@ -65,7 +78,7 @@ def load_config(
     variables are present, returns your defaults unchanged.
     """
     # ── Priority 1: Candidate ID → resolver API ──────────────────────
-    candidate_id = os.environ.get("AGENT_OPTIMIZATION_CANDIDATE_ID", "").strip()
+    candidate_id = os.environ.get(OptimizationConfig.ENV_CANDIDATE_ID, "").strip()
     if candidate_id:
         resolved = resolve_candidate(candidate_id)
         if resolved is not None:
@@ -84,9 +97,9 @@ def load_config(
         )
 
     # ── Priority 2: Config env var (inline JSON) ───────────────────
-    # AGENT_OPTIMIZATION_CONFIG is set by the optimization service (first-party).
-    # OPTIMIZATION_CONFIG is the non-reserved fallback used by CLI tooling.
-    for env_var in ("AGENT_OPTIMIZATION_CONFIG", "OPTIMIZATION_CONFIG"):
+    # Try OPTIMIZATION_CONFIG first, fall back to AGENT_OPTIMIZATION_CONFIG
+    # for backward compatibility.
+    for env_var in (OptimizationConfig.ENV_CONFIG, OptimizationConfig.ENV_CONFIG_LEGACY):
         raw_config = os.environ.get(env_var, "").strip()
         if raw_config:
             try:
