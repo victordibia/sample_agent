@@ -15,19 +15,24 @@ logger = logging.getLogger("agent_optimization")
 _cache: dict[str, dict[str, Any]] = {}
 _DEFAULT_SKILLS_DIR = ".agent_optimization_skills"
 
+# TODO(1): Revert to AGENT_OPTIMIZATION_RESOLVE_ENDPOINT / AGENT_OPTIMIZATION_SKILLS_DIR
+# once the platform allowlists AGENT_* env vars (see OptimizationConfig TODO).
+ENV_RESOLVE_ENDPOINT = "OPTIMIZATION_RESOLVE_ENDPOINT"
+ENV_SKILLS_DIR = "OPTIMIZATION_SKILLS_DIR"
+
 
 def resolve_candidate(candidate_id: str) -> dict[str, Any] | None:
     """Resolve a candidate's full config from the optimization service.
 
-    Uses ``AGENT_OPTIMIZATION_RESOLVE_ENDPOINT`` env var as the base URL.
+    Uses ``OPTIMIZATION_RESOLVE_ENDPOINT`` env var as the base URL.
     Returns ``None`` if the endpoint is not configured or the call fails.
     """
     if candidate_id in _cache:
         return _cache[candidate_id]
 
-    endpoint = os.environ.get("AGENT_OPTIMIZATION_RESOLVE_ENDPOINT", "").strip().rstrip("/")
+    endpoint = os.environ.get(ENV_RESOLVE_ENDPOINT, "").strip().rstrip("/")
     if not endpoint:
-        logger.debug("AGENT_OPTIMIZATION_RESOLVE_ENDPOINT not set — cannot resolve candidate")
+        logger.debug("%s not set — cannot resolve candidate", ENV_RESOLVE_ENDPOINT)
         return None
 
     headers = _build_headers()
@@ -46,7 +51,7 @@ def resolve_candidate(candidate_id: str) -> dict[str, Any] | None:
     )
 
     # ── Step 2: Fetch manifest and download skill files ──────────────
-    skills_dir = os.environ.get("AGENT_OPTIMIZATION_SKILLS_DIR", _DEFAULT_SKILLS_DIR)
+    skills_dir = os.environ.get(ENV_SKILLS_DIR, _DEFAULT_SKILLS_DIR)
     downloaded_skills_dir = _download_skill_files(
         endpoint, candidate_id, headers, skills_dir
     )

@@ -12,8 +12,8 @@ One import, one call::
     # config.source        — "api:candidate:abc", "env:config", or "defaults"
 
 Resolution order:
-    1. AGENT_OPTIMIZATION_CANDIDATE_ID env → resolver API → full config + skills
-    2. AGENT_OPTIMIZATION_CONFIG env var   → inline JSON fallback
+    1. OPTIMIZATION_CANDIDATE_ID env → resolver API → full config + skills
+    2. OPTIMIZATION_CONFIG env var   → inline JSON fallback
     3. Defaults              → your hardcoded values (agent works normally)
 """
 

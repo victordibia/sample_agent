@@ -7,7 +7,7 @@ Normal operation (no optimization):
     Uses the defaults you specify below — behaves like a regular chat agent.
 
 During optimization:
-    The optimization service injects OPTIMIZATION_CONFIG / AGENT_OPTIMIZATION_CONFIG.
+    The optimization service injects OPTIMIZATION_CONFIG.
     load_config() picks them up and returns the candidate's config.
 """
 
